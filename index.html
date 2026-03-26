@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nostkey - Passkey Login for Nostr</title>
-  <meta name="description" content="Alternative passkey gateway for Nostr. Decentralized key management hosted on GitHub Pages, compatible with keytr.org and all NIP-79 clients.">
+  <meta name="description" content="Alternative passkey gateway for Nostr. Decentralized key management hosted on GitHub Pages, compatible with keytr.org and all NIP-K1 clients.">
   <meta name="theme-color" content="#f59e0b">
   <meta property="og:title" content="nostkey - Passkey Login for Nostr">
-  <meta property="og:description" content="Decentralized passkey gateway for Nostr. Compatible with keytr.org and all NIP-79 clients.">
+  <meta property="og:description" content="Decentralized passkey gateway for Nostr. Compatible with keytr.org and all NIP-K1 clients.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://nostkey.org">
   <link rel="stylesheet" href="style.css">
@@ -28,7 +28,7 @@
         </div>
       </nav>
       <div class="hero-content">
-        <div class="badge">NIP-79 Compatible Gateway</div>
+        <div class="badge">NIP-K1 Compatible Gateway</div>
         <h1>Passkey login<br>for <span class="gradient-text">Nostr</span></h1>
         <p class="hero-sub">An alternative passkey gateway for Nostr. Decentralize your key management across multiple providers. No single point of failure.</p>
         <div class="hero-actions">
@@ -96,8 +96,8 @@
         <div class="flow-step">
           <div class="step-number">2</div>
           <div class="step-content">
-            <h4>Encrypt with PRF</h4>
-            <p>Each passkey's PRF extension produces a unique deterministic secret. Your nsec is encrypted separately for each credential.</p>
+            <h4>Encrypt &amp; vault the key</h4>
+            <p>Each passkey stores a unique random encryption key in its <code>user.id</code> field. Your nsec is encrypted separately for each credential.</p>
           </div>
         </div>
         <div class="flow-step">
@@ -138,7 +138,7 @@
           </div>
           <div class="arch-arrow">&rarr;</div>
           <div class="arch-node arch-crypto">
-            <div class="arch-label">HKDF + AES-256-GCM</div>
+            <div class="arch-label">AES-256-GCM</div>
             <div class="arch-detail">Per-gateway encryption</div>
           </div>
           <div class="arch-arrow">&rarr;</div>
@@ -163,10 +163,10 @@
         <div class="crypto-card">
           <h3>Encryption scheme</h3>
           <ul>
-            <li><strong>Key source</strong> <span>WebAuthn PRF extension (hmac-secret)</span></li>
-            <li><strong>KDF</strong> <span>HKDF-SHA256 with random 32-byte salt</span></li>
+            <li><strong>Key source</strong> <span>Random 256-bit export key in WebAuthn user.id</span></li>
+            <li><strong>Split knowledge</strong> <span>Relay has ciphertext, passkey has key</span></li>
             <li><strong>Cipher</strong> <span>AES-256-GCM with 12-byte random IV</span></li>
-            <li><strong>AAD</strong> <span>Credential ID + version (prevents substitution)</span></li>
+            <li><strong>AAD</strong> <span>Credential ID (prevents substitution)</span></li>
           </ul>
         </div>
         <div class="crypto-card">
@@ -213,22 +213,18 @@
           <span class="code-title">Register on both gateways for redundancy</span>
         </div>
         <pre><code><span class="c">// Register passkey against keytr.org (Cloudflare)</span>
-<span class="k">const</span> cred1 = <span class="k">await</span> navigator.credentials.create({
-  publicKey: {
-    rp: { id: <span class="s">"keytr.org"</span>, name: <span class="s">"keytr"</span> },
-    extensions: { prf: { eval: { first: salt } } }
-  }
+<span class="k">const</span> result1 = <span class="k">await</span> setupKeytr({
+  userName: npub, rpId: <span class="s">"keytr.org"</span>
 })
 
 <span class="c">// Register passkey against nostkey.org (GitHub Pages)</span>
-<span class="k">const</span> cred2 = <span class="k">await</span> navigator.credentials.create({
-  publicKey: {
-    rp: { id: <span class="s">"nostkey.org"</span>, name: <span class="s">"nostkey"</span> },
-    extensions: { prf: { eval: { first: salt } } }
-  }
+<span class="k">const</span> result2 = <span class="k">await</span> setupKeytr({
+  userName: npub, rpId: <span class="s">"nostkey.org"</span>,
+  nsecBytes: existingNsec  <span class="c">// reuse same identity</span>
 })
 
 <span class="c">// Each credential produces a separate kind:30079 event</span>
+<span class="c">// with its own export key vaulted in user.id</span>
 <span class="c">// Lose access to one gateway? The other still works.</span></code></pre>
       </div>
     </div>
@@ -260,11 +256,11 @@
     </div>
   </section>
 
-  <!-- NIP-79 Event -->
+  <!-- NIP-K1 Event -->
   <section class="event-spec">
     <div class="container">
       <div class="section-header">
-        <h2>The event &mdash; NIP-79</h2>
+        <h2>The event &mdash; NIP-K1</h2>
         <p>Same event format as keytr. Fully compatible <code>kind:30079</code> parameterized replaceable events.</p>
       </div>
       <div class="code-section">
@@ -281,12 +277,12 @@
     [<span class="s">"d"</span>, <span class="s">"&lt;credential-id&gt;"</span>],
     [<span class="s">"rp"</span>, <span class="s">"nostkey.org"</span>],
     [<span class="s">"algo"</span>, <span class="s">"aes-256-gcm"</span>],
-    [<span class="s">"kdf"</span>, <span class="s">"hkdf-sha256"</span>],
+    [<span class="s">"scheme"</span>, <span class="s">"passkey-vault"</span>],
     [<span class="s">"v"</span>, <span class="s">"1"</span>]
   ]
 }</code></pre>
       </div>
-      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Clients query for events matching the gateway they're authenticating against.</p>
+      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Each gateway's passkey holds its own export key &mdash; clients query for events matching the gateway they're authenticating against.</p>
     </div>
   </section>
 
@@ -314,24 +310,17 @@
             <span class="code-dot"></span>
             <span class="code-title">Usage with nostkey.org gateway</span>
           </div>
-          <pre><code><span class="k">import</span> { registerPasskey, encryptNsec, decryptNsec } <span class="k">from</span> <span class="s">'keytr'</span>
+          <pre><code><span class="k">import</span> { setupKeytr, loginWithKeytr, fetchKeytrEvents } <span class="k">from</span> <span class="s">'keytr'</span>
 
-<span class="c">// Register against nostkey.org</span>
-<span class="k">const</span> cred = <span class="k">await</span> registerPasskey({
-  rpId: <span class="s">'nostkey.org'</span>,
-  rpName: <span class="s">'nostkey'</span>,
-  userName: npub
-})
+<span class="c">// Setup with nostkey.org gateway</span>
+<span class="k">const</span> { credential, encryptedBlob, eventTemplate, nsecBytes, npub }
+  = <span class="k">await</span> setupKeytr({ userName: <span class="s">'alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
 
-<span class="c">// Encrypt &amp; publish (identical API)</span>
-<span class="k">const</span> blob = <span class="k">await</span> encryptNsec({ nsec, credential: cred })
+<span class="c">// Sign &amp; publish the kind:30079 event to relays</span>
 
-<span class="c">// Decrypt on new device</span>
-<span class="k">const</span> { nsec } = <span class="k">await</span> decryptNsec({
-  encryptedBlob: blob,
-  credentialId: cred.credentialId,
-  rpId: <span class="s">'nostkey.org'</span>
-})</code></pre>
+<span class="c">// Login on new device: one biometric tap</span>
+<span class="k">const</span> events = <span class="k">await</span> fetchKeytrEvents(pubkey, relays)
+<span class="k">const</span> { nsecBytes, npub } = <span class="k">await</span> loginWithKeytr(events[0])</code></pre>
         </div>
         <p class="dev-note">To have your origin authorized for cross-client login via nostkey.org, add your domain to the <a href="https://github.com/sovITxyz/nostkey.org">origins list</a> via PR.</p>
       </div>
@@ -348,7 +337,7 @@
           <a href="https://github.com/sovITxyz/keytr" class="btn btn-primary btn-lg">keytr Library</a>
           <a href="https://github.com/sovITxyz/nostkey.org" class="btn btn-ghost btn-lg">Site Source</a>
           <a href="https://keytr.org" class="btn btn-ghost btn-lg">keytr.org</a>
-          <a href="https://github.com/sovITxyz/keytr/blob/main/nip/nip-79.md" class="btn btn-ghost btn-lg">Read NIP-79</a>
+          <a href="https://github.com/sovITxyz/keytr/blob/main/nip/nip-k1.md" class="btn btn-ghost btn-lg">Read NIP-K1</a>
         </div>
       </div>
     </div>
@@ -359,7 +348,7 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-logo">nost<span>key</span></div>
-        <p><a href="https://github.com/sovITxyz/keytr/blob/main/LICENSE">AGPL-3.0</a> &middot; Built by <a href="https://sovit.xyz">sovIT</a> &middot; <a href="https://keytr.org">keytr.org</a></p>
+        <p><a href="https://github.com/sovITxyz/keytr/blob/main/LICENSE">AGPL-3.0</a> &middot; Built by <a href="https://sovit.xyz">sovIT</a> &middot; <a href="https://keytr.org">keytr.org</a> &middot; Passkey vault approach inspired by <a href="https://bittasker.com">BitTasker</a></p>
       </div>
     </div>
   </footer>
