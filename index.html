@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nostkey - Passkey Login for Nostr</title>
+  <meta name="description" content="Alternative passkey gateway for Nostr. Decentralized key management hosted on GitHub Pages, compatible with keytr.org and all NIP-79 clients.">
+  <meta name="theme-color" content="#f59e0b">
+  <meta property="og:title" content="nostkey - Passkey Login for Nostr">
+  <meta property="og:description" content="Decentralized passkey gateway for Nostr. Compatible with keytr.org and all NIP-79 clients.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nostkey.org">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-glow"></div>
+    <div class="container">
+      <nav>
+        <div class="logo">nost<span>key</span></div>
+        <div class="nav-links">
+          <a href="#how-it-works">How It Works</a>
+          <a href="#decentralized">Decentralized</a>
+          <a href="#developers">Developers</a>
+          <a href="https://github.com/sovITxyz/nostkey.org" class="nav-cta">GitHub</a>
+        </div>
+      </nav>
+      <div class="hero-content">
+        <div class="badge">NIP-79 Compatible Gateway</div>
+        <h1>Passkey login<br>for <span class="gradient-text">Nostr</span></h1>
+        <p class="hero-sub">An alternative passkey gateway for Nostr. Decentralize your key management across multiple providers. No single point of failure.</p>
+        <div class="hero-actions">
+          <a href="#decentralized" class="btn btn-primary">Why decentralize?</a>
+          <a href="#how-it-works" class="btn btn-ghost">Learn more</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Decentralized -->
+  <section id="decentralized" class="decentralized">
+    <div class="container">
+      <div class="section-header">
+        <h2>Two gateways, zero single points of failure</h2>
+        <p>Your passkey-encrypted keys live on Nostr relays. The gateways just provide the WebAuthn rpId &mdash; and now there are two.</p>
+      </div>
+
+      <div class="gateway-comparison">
+        <div class="gw-card">
+          <div class="gw-badge gw-cloudflare">Cloudflare</div>
+          <div class="gw-domain">keytr.org</div>
+          <div class="gw-desc">Primary gateway operated by sovIT. Hosted on Cloudflare for global edge performance.</div>
+          <ul class="gw-details">
+            <li><strong>Hosting</strong> <span>Cloudflare Pages</span></li>
+            <li><strong>Operator</strong> <span>sovIT</span></li>
+            <li><strong>Status</strong> <span>Active</span></li>
+          </ul>
+        </div>
+        <div class="gw-card gw-highlight">
+          <div class="gw-badge gw-github">GitHub Pages</div>
+          <div class="gw-domain">nostkey.org</div>
+          <div class="gw-desc">Alternative gateway hosted on GitHub Pages. Same protocol, different infrastructure. True decentralization.</div>
+          <ul class="gw-details">
+            <li><strong>Hosting</strong> <span>GitHub Pages</span></li>
+            <li><strong>Operator</strong> <span>sovIT</span></li>
+            <li><strong>Status</strong> <span>Active</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="decentralized-note">
+        <strong>Why does this matter?</strong> WebAuthn passkeys are bound to the domain (rpId) they were created on. If keytr.org goes down or Cloudflare has an outage, passkeys registered against it can't authenticate. By registering passkeys against <em>both</em> gateways, you maintain access even if one provider fails. Each gateway produces a separate <code>kind:30079</code> event on your relays.
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2>How it works</h2>
+        <p>nostkey.org is a fully compatible keytr gateway. Same protocol, same encryption, different domain.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-line"></div>
+        <div class="flow-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Register passkeys on multiple gateways</h4>
+            <p>Create passkeys on both <code>keytr.org</code> and <code>nostkey.org</code> for redundancy. Each produces an independent credential.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Encrypt with PRF</h4>
+            <p>Each passkey's PRF extension produces a unique deterministic secret. Your nsec is encrypted separately for each credential.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>Publish to relays</h4>
+            <p>Each encrypted blob is published as a separate <code>kind:30079</code> event. One tags <code>rp: keytr.org</code>, the other tags <code>rp: nostkey.org</code>.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>Login from any gateway</h4>
+            <p>On a new device, authenticate with whichever gateway is available. Cloudflare down? Use nostkey.org. GitHub down? Use keytr.org.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section class="architecture">
+    <div class="container">
+      <div class="section-header">
+        <h2>Architecture</h2>
+        <p>Same encryption. Different infrastructure. True redundancy.</p>
+      </div>
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node arch-device">
+            <div class="arch-label">Your device</div>
+            <div class="arch-detail">Passkey + biometric</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-gateways">
+            <div class="arch-label">Gateways (rpId)</div>
+            <div class="arch-detail">keytr.org + nostkey.org</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-crypto">
+            <div class="arch-label">HKDF + AES-256-GCM</div>
+            <div class="arch-detail">Per-gateway encryption</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-relay">
+            <div class="arch-label">Nostr relays</div>
+            <div class="arch-detail">Multiple kind:30079 events</div>
+          </div>
+        </div>
+        <div class="arch-note">All cryptography happens client-side. Gateways are static files &mdash; they serve the <code>/.well-known/webauthn</code> endpoint and nothing else.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section id="security" class="security">
+    <div class="container">
+      <div class="section-header">
+        <h2>Security</h2>
+        <p>Identical cryptography to keytr. Decentralization adds resilience, not complexity.</p>
+      </div>
+      <div class="crypto-grid">
+        <div class="crypto-card">
+          <h3>Encryption scheme</h3>
+          <ul>
+            <li><strong>Key source</strong> <span>WebAuthn PRF extension (hmac-secret)</span></li>
+            <li><strong>KDF</strong> <span>HKDF-SHA256 with random 32-byte salt</span></li>
+            <li><strong>Cipher</strong> <span>AES-256-GCM with 12-byte random IV</span></li>
+            <li><strong>AAD</strong> <span>Credential ID + version (prevents substitution)</span></li>
+          </ul>
+        </div>
+        <div class="crypto-card">
+          <h3>Multi-gateway benefits</h3>
+          <ul>
+            <li><strong>No SPOF</strong> <span>Two providers, two infrastructure stacks</span></li>
+            <li><strong>Domain diversity</strong> <span>Different registrars, DNS, hosting</span></li>
+            <li><strong>Independent credentials</strong> <span>Compromise of one gateway doesn't affect the other</span></li>
+            <li><strong>Relay redundancy</strong> <span>Separate events per gateway on your relays</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Federation -->
+  <section class="federation">
+    <div class="container">
+      <div class="section-header">
+        <h2>Federated cross-client login</h2>
+        <p>Both gateways support the same Related Origin Requests spec. Any compatible client works with either.</p>
+      </div>
+
+      <div class="fed-grid">
+        <div class="fed-card">
+          <div class="fed-domain">keytr.org</div>
+          <div class="fed-desc">Cloudflare &mdash; primary gateway</div>
+        </div>
+        <div class="fed-card fed-card-highlight">
+          <div class="fed-domain">nostkey.org</div>
+          <div class="fed-desc">GitHub Pages &mdash; alternative gateway</div>
+        </div>
+        <div class="fed-card">
+          <div class="fed-domain">your-domain.com</div>
+          <div class="fed-desc">Run your own &mdash; anyone can</div>
+        </div>
+      </div>
+
+      <div class="code-section">
+        <div class="code-header">
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-title">Register on both gateways for redundancy</span>
+        </div>
+        <pre><code><span class="c">// Register passkey against keytr.org (Cloudflare)</span>
+<span class="k">const</span> cred1 = <span class="k">await</span> navigator.credentials.create({
+  publicKey: {
+    rp: { id: <span class="s">"keytr.org"</span>, name: <span class="s">"keytr"</span> },
+    extensions: { prf: { eval: { first: salt } } }
+  }
+})
+
+<span class="c">// Register passkey against nostkey.org (GitHub Pages)</span>
+<span class="k">const</span> cred2 = <span class="k">await</span> navigator.credentials.create({
+  publicKey: {
+    rp: { id: <span class="s">"nostkey.org"</span>, name: <span class="s">"nostkey"</span> },
+    extensions: { prf: { eval: { first: salt } } }
+  }
+})
+
+<span class="c">// Each credential produces a separate kind:30079 event</span>
+<span class="c">// Lose access to one gateway? The other still works.</span></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Run Your Own Gateway -->
+  <section class="gateway">
+    <div class="container">
+      <div class="section-header">
+        <h2>Run your own gateway</h2>
+        <p>Three gateways are better than two. All you need is a domain and one file.</p>
+      </div>
+      <div class="code-section">
+        <div class="code-header">
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-title">/.well-known/webauthn</span>
+        </div>
+        <pre><code>{
+  <span class="s">"origins"</span>: [
+    <span class="s">"https://nostkey.org"</span>,
+    <span class="s">"https://client-a.com"</span>,
+    <span class="s">"https://client-b.com"</span>
+  ]
+}</code></pre>
+      </div>
+      <p class="gateway-note">Clients listed in your <code>origins</code> can register passkeys under your domain's rpId. The browser verifies authorization automatically via the <a href="https://w3c.github.io/webauthn/#sctn-related-origins">Related Origin Requests</a> spec.</p>
+    </div>
+  </section>
+
+  <!-- NIP-79 Event -->
+  <section class="event-spec">
+    <div class="container">
+      <div class="section-header">
+        <h2>The event &mdash; NIP-79</h2>
+        <p>Same event format as keytr. Fully compatible <code>kind:30079</code> parameterized replaceable events.</p>
+      </div>
+      <div class="code-section">
+        <div class="code-header">
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-dot"></span>
+          <span class="code-title">kind:30079 (nostkey.org gateway)</span>
+        </div>
+        <pre><code>{
+  <span class="s">"kind"</span>: <span class="n">30079</span>,
+  <span class="s">"content"</span>: <span class="s">"&lt;base64 encrypted nsec blob&gt;"</span>,
+  <span class="s">"tags"</span>: [
+    [<span class="s">"d"</span>, <span class="s">"&lt;credential-id&gt;"</span>],
+    [<span class="s">"rp"</span>, <span class="s">"nostkey.org"</span>],
+    [<span class="s">"algo"</span>, <span class="s">"aes-256-gcm"</span>],
+    [<span class="s">"kdf"</span>, <span class="s">"hkdf-sha256"</span>],
+    [<span class="s">"v"</span>, <span class="s">"1"</span>]
+  ]
+}</code></pre>
+      </div>
+      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Clients query for events matching the gateway they're authenticating against.</p>
+    </div>
+  </section>
+
+  <!-- Developers -->
+  <section id="developers" class="developers">
+    <div class="container">
+      <div class="section-header">
+        <h2>For client developers</h2>
+        <p>Use nostkey.org as an rpId in your Nostr client. Same keytr library, different gateway.</p>
+      </div>
+      <div class="dev-content">
+        <div class="code-section">
+          <div class="code-header">
+            <span class="code-dot"></span>
+            <span class="code-dot"></span>
+            <span class="code-dot"></span>
+            <span class="code-title">Install</span>
+          </div>
+          <pre><code>npm install keytr</code></pre>
+        </div>
+        <div class="code-section">
+          <div class="code-header">
+            <span class="code-dot"></span>
+            <span class="code-dot"></span>
+            <span class="code-dot"></span>
+            <span class="code-title">Usage with nostkey.org gateway</span>
+          </div>
+          <pre><code><span class="k">import</span> { registerPasskey, encryptNsec, decryptNsec } <span class="k">from</span> <span class="s">'keytr'</span>
+
+<span class="c">// Register against nostkey.org</span>
+<span class="k">const</span> cred = <span class="k">await</span> registerPasskey({
+  rpId: <span class="s">'nostkey.org'</span>,
+  rpName: <span class="s">'nostkey'</span>,
+  userName: npub
+})
+
+<span class="c">// Encrypt &amp; publish (identical API)</span>
+<span class="k">const</span> blob = <span class="k">await</span> encryptNsec({ nsec, credential: cred })
+
+<span class="c">// Decrypt on new device</span>
+<span class="k">const</span> { nsec } = <span class="k">await</span> decryptNsec({
+  encryptedBlob: blob,
+  credentialId: cred.credentialId,
+  rpId: <span class="s">'nostkey.org'</span>
+})</code></pre>
+        </div>
+        <p class="dev-note">To have your origin authorized for cross-client login via nostkey.org, add your domain to the <a href="https://github.com/sovITxyz/nostkey.org">origins list</a> via PR.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Decentralize your Nostr keys</h2>
+        <p>Register passkeys on both gateways. No single point of failure. No single provider to trust.</p>
+        <div class="cta-actions">
+          <a href="https://github.com/sovITxyz/keytr" class="btn btn-primary btn-lg">keytr Library</a>
+          <a href="https://keytr.org" class="btn btn-ghost btn-lg">keytr.org</a>
+          <a href="https://github.com/sovITxyz/keytr/blob/main/nip/nip-79.md" class="btn btn-ghost btn-lg">Read NIP-79</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">nost<span>key</span></div>
+        <p><a href="https://github.com/sovITxyz/keytr/blob/main/LICENSE">AGPL-3.0</a> &middot; Built by <a href="https://sovit.xyz">sovIT</a> &middot; <a href="https://keytr.org">keytr.org</a></p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
