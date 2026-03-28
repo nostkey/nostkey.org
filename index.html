@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nostkey - Passkey Login for Nostr</title>
-  <meta name="description" content="Alternative passkey gateway for Nostr. Decentralized key management hosted on GitHub Pages, compatible with keytr.org and all NIP-K1 clients.">
+  <meta name="description" content="Alternative passkey gateway for Nostr. Decentralized key management hosted on Hostinger, compatible with keytr.org and all NIP-K1 clients.">
   <meta name="theme-color" content="#f59e0b">
   <meta property="og:title" content="nostkey - Passkey Login for Nostr">
   <meta property="og:description" content="Decentralized passkey gateway for Nostr. Compatible with keytr.org and all NIP-K1 clients.">
@@ -24,7 +24,7 @@
           <a href="#how-it-works">How It Works</a>
           <a href="#decentralized">Decentralized</a>
           <a href="#developers">Developers</a>
-          <a href="https://github.com/nostkey/nostkey.org" class="nav-cta">GitHub</a>
+          <a href="https://github.com/sovITxyz/nostkey.org" class="nav-cta">GitHub</a>
         </div>
       </nav>
       <div class="hero-content">
@@ -60,11 +60,11 @@
           </ul>
         </div>
         <div class="gw-card gw-highlight">
-          <div class="gw-badge gw-github">GitHub Pages</div>
+          <div class="gw-badge gw-hostinger">Hostinger</div>
           <div class="gw-domain">nostkey.org</div>
-          <div class="gw-desc">Alternative gateway hosted on GitHub Pages. Same protocol, different infrastructure. True decentralization.</div>
+          <div class="gw-desc">Alternative gateway hosted on Hostinger. Same protocol, different infrastructure. True decentralization.</div>
           <ul class="gw-details">
-            <li><strong>Hosting</strong> <span>GitHub Pages</span></li>
+            <li><strong>Hosting</strong> <span>Hostinger</span></li>
             <li><strong>Operator</strong> <span>sovIT</span></li>
             <li><strong>Status</strong> <span>Active</span></li>
           </ul>
@@ -198,7 +198,7 @@
         </div>
         <div class="fed-card fed-card-highlight">
           <div class="fed-domain">nostkey.org</div>
-          <div class="fed-desc">GitHub Pages &mdash; alternative gateway</div>
+          <div class="fed-desc">Hostinger &mdash; alternative gateway</div>
         </div>
         <div class="fed-card">
           <div class="fed-domain">your-domain.com</div>
@@ -218,7 +218,7 @@
   userName: npub, userDisplayName: npub, rpId: <span class="s">"keytr.org"</span>
 })
 
-<span class="c">// Register backup passkey against nostkey.org (GitHub Pages)</span>
+<span class="c">// Register backup passkey against nostkey.org (Hostinger)</span>
 <span class="k">const</span> backup = <span class="k">await</span> addBackupGateway(nsecBytes, {
   userName: npub, userDisplayName: npub, rpId: <span class="s">"nostkey.org"</span>
 })
@@ -324,7 +324,7 @@
 <span class="k">const</span> events = <span class="k">await</span> fetchKeytrEvents(pubkey, relays)
 <span class="k">const</span> { nsecBytes, npub } = <span class="k">await</span> loginWithKeytr(events)</code></pre>
         </div>
-        <p class="dev-note">To have your origin authorized for cross-client login via nostkey.org, add your domain to the <a href="https://github.com/nostkey/nostkey.org">origins list</a> via PR.</p>
+        <p class="dev-note">To have your origin authorized for cross-client login via nostkey.org, add your domain to the <a href="https://github.com/sovITxyz/nostkey.org">origins list</a> via PR.</p>
       </div>
     </div>
   </section>
@@ -338,7 +338,7 @@
         <div class="cta-actions">
           <a href="https://keytr.org" class="btn btn-primary btn-lg">keytr.org</a>
           <a href="https://www.npmjs.com/package/@sovit.xyz/keytr" class="btn btn-ghost btn-lg">npm package</a>
-          <a href="https://github.com/nostkey/nostkey.org" class="btn btn-ghost btn-lg">Site Source</a>
+          <a href="https://github.com/sovITxyz/nostkey.org" class="btn btn-ghost btn-lg">Site Source</a>
           <a href="https://github.com/sovITxyz/keytr/blob/main/nip/nip-k1.md" class="btn btn-ghost btn-lg">Read NIP-K1</a>
         </div>
       </div>
