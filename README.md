@@ -16,7 +16,7 @@ WebAuthn passkeys are bound to the domain (rpId) they were created on. If `keytr
 - `keytr.org` — Cloudflare Pages
 - `nostkey.org` — Hostinger
 
-Different domains, different registrars, different hosting providers. Each gateway produces a separate `kind:30079` event on the user's relays.
+Different domains, different registrars, different hosting providers. Each gateway produces a separate `kind:31777` event on the user's relays.
 
 ## Gateway
 

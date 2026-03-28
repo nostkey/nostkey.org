@@ -74,7 +74,7 @@
       </div>
 
       <div class="decentralized-note">
-        <strong>Why does this matter?</strong> WebAuthn passkeys are bound to the domain (rpId) they were created on. If keytr.org goes down or Cloudflare has an outage, passkeys registered against it can't authenticate. By registering passkeys against <em>both</em> gateways, you maintain access even if one provider fails. Each gateway produces a separate <code>kind:30079</code> event on your relays.
+        <strong>Why does this matter?</strong> WebAuthn passkeys are bound to the domain (rpId) they were created on. If keytr.org goes down or Cloudflare has an outage, passkeys registered against it can't authenticate. By registering passkeys against <em>both</em> gateways, you maintain access even if one provider fails. Each gateway produces a separate <code>kind:31777</code> event on your relays.
       </div>
     </div>
   </section>
@@ -107,7 +107,7 @@
           <div class="step-number">3</div>
           <div class="step-content">
             <h4>Publish to relays</h4>
-            <p>Each encrypted blob is published as a separate <code>kind:30079</code> event. One tags <code>rp: keytr.org</code>, the other tags <code>rp: nostkey.org</code>.</p>
+            <p>Each encrypted blob is published as a separate <code>kind:31777</code> event. One tags <code>rp: keytr.org</code>, the other tags <code>rp: nostkey.org</code>.</p>
           </div>
         </div>
         <div class="flow-step">
@@ -147,7 +147,7 @@
           <div class="arch-arrow">&rarr;</div>
           <div class="arch-node arch-relay">
             <div class="arch-label">Nostr relays</div>
-            <div class="arch-detail">Multiple kind:30079 events</div>
+            <div class="arch-detail">Multiple kind:31777 events</div>
           </div>
         </div>
         <div class="arch-note">All cryptography happens client-side. Gateways are static files &mdash; they serve the <code>/.well-known/webauthn</code> endpoint and nothing else.</div>
@@ -225,7 +225,7 @@
   userName: npub, userDisplayName: npub, rpId: <span class="s">"nostkey.org"</span>
 })
 
-<span class="c">// Each credential produces a separate kind:30079 event</span>
+<span class="c">// Each credential produces a separate kind:31777 event</span>
 <span class="c">// with its own PRF-derived encryption key</span>
 <span class="c">// Lose access to one gateway? The other still works.</span></code></pre>
       </div>
@@ -263,17 +263,17 @@
     <div class="container">
       <div class="section-header">
         <h2>The event &mdash; NIP-K1</h2>
-        <p>Same event format as keytr. Fully compatible <code>kind:30079</code> parameterized replaceable events.</p>
+        <p>Same event format as keytr. Fully compatible <code>kind:31777</code> parameterized replaceable events.</p>
       </div>
       <div class="code-section">
         <div class="code-header">
           <span class="code-dot"></span>
           <span class="code-dot"></span>
           <span class="code-dot"></span>
-          <span class="code-title">kind:30079 (nostkey.org gateway)</span>
+          <span class="code-title">kind:31777 (nostkey.org gateway)</span>
         </div>
         <pre><code>{
-  <span class="s">"kind"</span>: <span class="n">30079</span>,
+  <span class="s">"kind"</span>: <span class="n">31777</span>,
   <span class="s">"content"</span>: <span class="s">"&lt;base64 encrypted 93-byte blob&gt;"</span>,
   <span class="s">"tags"</span>: [
     [<span class="s">"d"</span>, <span class="s">"&lt;credential-id-base64url&gt;"</span>],
@@ -320,7 +320,7 @@
 <span class="k">const</span> { credential, encryptedBlob, eventTemplate, nsecBytes, npub }
   = <span class="k">await</span> setupKeytr({ userName: <span class="s">'alice'</span>, userDisplayName: <span class="s">'Alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
 
-<span class="c">// Sign &amp; publish the kind:30079 event to relays</span>
+<span class="c">// Sign &amp; publish the kind:31777 event to relays</span>
 
 <span class="c">// Login on new device: one biometric tap</span>
 <span class="k">const</span> events = <span class="k">await</span> fetchKeytrEvents(pubkey, relays)
