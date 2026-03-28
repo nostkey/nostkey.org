@@ -1,0 +1,3 @@
+<Files "webauthn">
+  ForceType application/json
+</Files>
