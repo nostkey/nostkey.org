@@ -215,12 +215,12 @@
         </div>
         <pre><code><span class="c">// Register passkey against keytr.org (Cloudflare)</span>
 <span class="k">const</span> { nsecBytes } = <span class="k">await</span> setupKeytr({
-  userName: npub, rpId: <span class="s">"keytr.org"</span>
+  userName: npub, userDisplayName: npub, rpId: <span class="s">"keytr.org"</span>
 })
 
 <span class="c">// Register backup passkey against nostkey.org (GitHub Pages)</span>
 <span class="k">const</span> backup = <span class="k">await</span> addBackupGateway(nsecBytes, {
-  userName: npub, rpId: <span class="s">"nostkey.org"</span>
+  userName: npub, userDisplayName: npub, rpId: <span class="s">"nostkey.org"</span>
 })
 
 <span class="c">// Each credential produces a separate kind:30079 event</span>
@@ -316,7 +316,7 @@
 
 <span class="c">// Setup with nostkey.org gateway</span>
 <span class="k">const</span> { credential, encryptedBlob, eventTemplate, nsecBytes, npub }
-  = <span class="k">await</span> setupKeytr({ userName: <span class="s">'alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
+  = <span class="k">await</span> setupKeytr({ userName: <span class="s">'alice'</span>, userDisplayName: <span class="s">'Alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
 
 <span class="c">// Sign &amp; publish the kind:30079 event to relays</span>
 
