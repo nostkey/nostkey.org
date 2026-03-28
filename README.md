@@ -1,6 +1,6 @@
 # nostkey.org
 
-Alternative WebAuthn passkey gateway for [keytr](https://github.com/sovITxyz/keytr). Hosted on GitHub Pages.
+Alternative WebAuthn passkey gateway for [keytr](https://github.com/sovITxyz/keytr). Hosted on Hostinger.
 
 ## What this is
 
@@ -14,7 +14,7 @@ No server logic. No backend. Just static files.
 WebAuthn passkeys are bound to the domain (rpId) they were created on. If `keytr.org` goes down or Cloudflare has an outage, passkeys registered against it can't authenticate. By registering passkeys against **both** `keytr.org` and `nostkey.org`, users maintain access even if one provider fails.
 
 - `keytr.org` — Cloudflare Pages
-- `nostkey.org` — GitHub Pages
+- `nostkey.org` — Hostinger
 
 Different domains, different registrars, different hosting providers. Each gateway produces a separate `kind:30079` event on the user's relays.
 
