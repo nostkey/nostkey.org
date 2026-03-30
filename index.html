@@ -30,7 +30,7 @@
       <div class="hero-content">
         <div class="badge">NIP-K1 Compatible Gateway</div>
         <h1>Passkey login<br>for <span class="gradient-text">Nostr</span></h1>
-        <p class="hero-sub">An alternative passkey gateway for Nostr. Decentralize your key management across multiple providers. No single point of failure.</p>
+        <p class="hero-sub">An alternative passkey gateway for Nostr. Decentralize your key management across multiple providers. No single point of failure. Works with password managers via KiH mode.</p>
         <div class="hero-actions">
           <a href="https://keytr.org" class="btn btn-primary">keytr.org &rarr;</a>
           <a href="#decentralized" class="btn btn-ghost">Why decentralize?</a>
@@ -99,8 +99,8 @@
         <div class="flow-step">
           <div class="step-number">2</div>
           <div class="step-content">
-            <h4>Encrypt with PRF</h4>
-            <p>Each passkey's PRF extension produces a unique secret, run through HKDF-SHA256 to derive an AES key. Your nsec is encrypted separately for each credential.</p>
+            <h4>Encrypt</h4>
+            <p>Each passkey uses either PRF (hardware-bound secret) or KiH (random key stored in the passkey) to derive an AES key via HKDF-SHA256. Your nsec is encrypted separately for each credential. KiH mode works with 1Password, Bitwarden, and other password managers.</p>
           </div>
         </div>
         <div class="flow-step">
@@ -166,10 +166,10 @@
         <div class="crypto-card">
           <h3>Encryption scheme</h3>
           <ul>
-            <li><strong>Key source</strong> <span>PRF extension &rarr; HKDF-SHA256 with random salt</span></li>
-            <li><strong>user.id</strong> <span>32-byte Nostr public key (enables discoverable login)</span></li>
+            <li><strong>Key source</strong> <span>PRF extension or KiH random key &rarr; HKDF-SHA256</span></li>
+            <li><strong>Two modes</strong> <span>PRF (hardware-bound) or KiH (password manager compatible)</span></li>
             <li><strong>Cipher</strong> <span>AES-256-GCM with 12-byte random IV</span></li>
-            <li><strong>AAD</strong> <span>Credential ID + version byte (prevents substitution &amp; downgrade)</span></li>
+            <li><strong>AAD</strong> <span>Credential ID + mode-specific version byte (prevents cross-mode attacks)</span></li>
           </ul>
         </div>
         <div class="crypto-card">
@@ -215,8 +215,8 @@
           <span class="code-dot"></span>
           <span class="code-title">Register on both gateways for redundancy</span>
         </div>
-        <pre><code><span class="c">// Register passkey against keytr.org (Cloudflare)</span>
-<span class="k">const</span> { nsecBytes } = <span class="k">await</span> setupKeytr({
+        <pre><code><span class="c">// Register passkey against keytr.org (PRF-first, KiH fallback)</span>
+<span class="k">const</span> { nsecBytes, mode } = <span class="k">await</span> setup({
   userName: npub, userDisplayName: npub, rpId: <span class="s">"keytr.org"</span>
 })
 
@@ -226,7 +226,7 @@
 })
 
 <span class="c">// Each credential produces a separate kind:31777 event</span>
-<span class="c">// with its own PRF-derived encryption key</span>
+<span class="c">// Works with 1Password, Bitwarden, Dashlane via KiH mode</span>
 <span class="c">// Lose access to one gateway? The other still works.</span></code></pre>
       </div>
     </div>
@@ -286,7 +286,7 @@
   ]
 }</code></pre>
       </div>
-      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Each gateway's passkey produces its own PRF output for key derivation &mdash; clients query for events matching the gateway they're authenticating against. <code>transports</code> and <code>client</code> tags are optional.</p>
+      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Each gateway's passkey produces its own encryption key for key derivation &mdash; via PRF (v=1) or KiH (v=3). Clients query for events matching the gateway they're authenticating against. <code>transports</code> and <code>client</code> tags are optional.</p>
     </div>
   </section>
 
@@ -314,17 +314,16 @@
             <span class="code-dot"></span>
             <span class="code-title">Usage with nostkey.org gateway</span>
           </div>
-          <pre><code><span class="k">import</span> { setupKeytr, addBackupGateway, loginWithKeytr, fetchKeytrEvents } <span class="k">from</span> <span class="s">'@sovit.xyz/keytr'</span>
+          <pre><code><span class="k">import</span> { setup, discover, publishKeytrEvent } <span class="k">from</span> <span class="s">'@sovit.xyz/keytr'</span>
 
-<span class="c">// Setup with nostkey.org gateway</span>
-<span class="k">const</span> { credential, encryptedBlob, eventTemplate, nsecBytes, npub }
-  = <span class="k">await</span> setupKeytr({ userName: <span class="s">'alice'</span>, userDisplayName: <span class="s">'Alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
+<span class="c">// Setup with nostkey.org gateway (PRF-first, KiH fallback)</span>
+<span class="k">const</span> { eventTemplate, nsecBytes, npub, mode }
+  = <span class="k">await</span> setup({ userName: <span class="s">'alice'</span>, userDisplayName: <span class="s">'Alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
 
 <span class="c">// Sign &amp; publish the kind:31777 event to relays</span>
 
-<span class="c">// Login on new device: one biometric tap</span>
-<span class="k">const</span> events = <span class="k">await</span> fetchKeytrEvents(pubkey, relays)
-<span class="k">const</span> { nsecBytes, npub } = <span class="k">await</span> loginWithKeytr(events)</code></pre>
+<span class="c">// Discoverable login: auto-detects PRF vs KiH, one biometric tap</span>
+<span class="k">const</span> { nsecBytes, npub, pubkey } = <span class="k">await</span> discover(relays)</code></pre>
         </div>
         <p class="dev-note">To have your origin authorized for cross-client login via nostkey.org, add your domain to the <a href="https://github.com/sovITxyz/nostkey.org">origins list</a> via PR.</p>
       </div>
