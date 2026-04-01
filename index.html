@@ -30,7 +30,7 @@
       <div class="hero-content">
         <div class="badge">NIP-K1 Compatible Gateway</div>
         <h1>Passkey login<br>for <span class="gradient-text">Nostr</span></h1>
-        <p class="hero-sub">An alternative passkey gateway for Nostr. Decentralize your key management across multiple providers. No single point of failure. Works with password managers via KiH mode.</p>
+        <p class="hero-sub">An alternative passkey gateway for Nostr. Decentralize your key management across multiple providers. No single point of failure. Works with all authenticators.</p>
         <div class="hero-actions">
           <a href="https://keytr.org" class="btn btn-primary">keytr.org &rarr;</a>
           <a href="#decentralized" class="btn btn-ghost">Why decentralize?</a>
@@ -100,7 +100,7 @@
           <div class="step-number">2</div>
           <div class="step-content">
             <h4>Encrypt</h4>
-            <p>Each passkey uses either PRF (hardware-bound secret) or KiH (random key stored in the passkey) to derive an AES key via HKDF-SHA256. Your nsec is encrypted separately for each credential. KiH mode works with 1Password, Bitwarden, and other password managers.</p>
+            <p>Each passkey uses either PRF (hardware-bound secret) or KiH (random key stored in the passkey) to derive an AES key via HKDF-SHA256. Your nsec is encrypted separately for each credential. Most password managers now support PRF; KiH serves as an automatic fallback for authenticators without PRF.</p>
           </div>
         </div>
         <div class="flow-step">
@@ -167,7 +167,7 @@
           <h3>Encryption scheme</h3>
           <ul>
             <li><strong>Key source</strong> <span>PRF extension or KiH random key &rarr; HKDF-SHA256</span></li>
-            <li><strong>Two modes</strong> <span>PRF (hardware-bound) or KiH (password manager compatible)</span></li>
+            <li><strong>Two modes</strong> <span>PRF (hardware-bound) or KiH (universal fallback)</span></li>
             <li><strong>Cipher</strong> <span>AES-256-GCM with 12-byte random IV</span></li>
             <li><strong>AAD</strong> <span>Credential ID + mode-specific version byte (prevents cross-mode attacks)</span></li>
           </ul>
@@ -226,7 +226,7 @@
 })
 
 <span class="c">// Each credential produces a separate kind:31777 event</span>
-<span class="c">// Works with 1Password, Bitwarden, Dashlane via KiH mode</span>
+<span class="c">// PRF-first with automatic KiH fallback</span>
 <span class="c">// Lose access to one gateway? The other still works.</span></code></pre>
       </div>
     </div>
