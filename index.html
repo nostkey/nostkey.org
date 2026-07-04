@@ -100,7 +100,7 @@
           <div class="step-number">2</div>
           <div class="step-content">
             <h4>Encrypt</h4>
-            <p>Each passkey uses either PRF (hardware-bound secret) or KiH (random key stored in the passkey) to derive an AES key via HKDF-SHA256. Your nsec is encrypted separately for each credential. Most password managers now support PRF; KiH serves as an automatic fallback for authenticators without PRF.</p>
+            <p>Each passkey uses PRF &mdash; a hardware-bound secret that never leaves the authenticator &mdash; to derive an AES key via HKDF-SHA256. Your nsec is encrypted separately for each credential. Modern password managers and platform authenticators support PRF; if one doesn't, setup fails cleanly rather than falling back to a weaker mode.</p>
           </div>
         </div>
         <div class="flow-step">
@@ -142,12 +142,12 @@
           <div class="arch-arrow">&rarr;</div>
           <div class="arch-node arch-crypto">
             <div class="arch-label">AES-256-GCM</div>
-            <div class="arch-detail">Per-gateway encryption</div>
+            <div class="arch-detail">PRF &rarr; HKDF-SHA256 key</div>
           </div>
           <div class="arch-arrow">&rarr;</div>
           <div class="arch-node arch-relay">
             <div class="arch-label">Nostr relays</div>
-            <div class="arch-detail">Multiple kind:31777 events</div>
+            <div class="arch-detail">Multiple kind:31777 events (v=1)</div>
           </div>
         </div>
         <div class="arch-note">All cryptography happens client-side. Gateways are static files &mdash; they serve the <code>/.well-known/webauthn</code> endpoint and nothing else.</div>
@@ -166,10 +166,10 @@
         <div class="crypto-card">
           <h3>Encryption scheme</h3>
           <ul>
-            <li><strong>Key source</strong> <span>PRF extension or KiH random key &rarr; HKDF-SHA256</span></li>
-            <li><strong>Two modes</strong> <span>PRF (hardware-bound) or KiH (universal fallback)</span></li>
+            <li><strong>Key source</strong> <span>PRF extension secret &rarr; HKDF-SHA256</span></li>
+            <li><strong>One mode</strong> <span>PRF &mdash; key stays inside the authenticator</span></li>
             <li><strong>Cipher</strong> <span>AES-256-GCM with 12-byte random IV</span></li>
-            <li><strong>AAD</strong> <span>Credential ID + mode-specific version byte (prevents cross-mode attacks)</span></li>
+            <li><strong>AAD</strong> <span>Credential ID + version byte (binds ciphertext to the credential)</span></li>
           </ul>
         </div>
         <div class="crypto-card">
@@ -181,6 +181,9 @@
             <li><strong>Relay redundancy</strong> <span>Separate events per gateway on your relays</span></li>
           </ul>
         </div>
+      </div>
+      <div class="decentralized-note">
+        <strong>Why PRF only?</strong> keytr briefly experimented with a Key-in-Handle (KiH) mode that stored the encryption key inside the passkey. It was withdrawn as too risky &mdash; that key was exposed to page scripts &mdash; in favor of PRF, which keeps the key inside the authenticator where page code can't read it.
       </div>
     </div>
   </section>
@@ -215,18 +218,18 @@
           <span class="code-dot"></span>
           <span class="code-title">Register on both gateways for redundancy</span>
         </div>
-        <pre><code><span class="c">// Register passkey against keytr.org (PRF-first, KiH fallback)</span>
-<span class="k">const</span> { nsecBytes, mode } = <span class="k">await</span> setup({
-  userName: npub, userDisplayName: npub, rpId: <span class="s">"keytr.org"</span>
+        <pre><code><span class="c">// Register passkey against keytr.org (PRF)</span>
+<span class="k">const</span> { eventTemplate, nsecBytes, npub } = <span class="k">await</span> setup({
+  userName, userDisplayName, rpId: <span class="s">"keytr.org"</span>, rpName: <span class="s">"keytr"</span>
 })
 
-<span class="c">// Register backup passkey against nostkey.org (Hostinger)</span>
+<span class="c">// Register a backup passkey against nostkey.org (Hostinger)</span>
+<span class="c">// for the same nsec — one extra biometric prompt</span>
 <span class="k">const</span> backup = <span class="k">await</span> addBackupGateway(nsecBytes, {
-  userName: npub, userDisplayName: npub, rpId: <span class="s">"nostkey.org"</span>
+  userName, userDisplayName, rpId: <span class="s">"nostkey.org"</span>, rpName: <span class="s">"keytr"</span>
 })
 
-<span class="c">// Each credential produces a separate kind:31777 event</span>
-<span class="c">// PRF-first with automatic KiH fallback</span>
+<span class="c">// Each credential produces a separate kind:31777 event (v=1, PRF)</span>
 <span class="c">// Lose access to one gateway? The other still works.</span></code></pre>
       </div>
     </div>
@@ -286,7 +289,7 @@
   ]
 }</code></pre>
       </div>
-      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Each gateway's passkey produces its own encryption key for key derivation &mdash; via PRF (v=1) or KiH (v=3). Clients query for events matching the gateway they're authenticating against. <code>transports</code> and <code>client</code> tags are optional.</p>
+      <p class="event-note">The only difference from a keytr.org event is the <code>rp</code> tag. Each gateway's passkey derives its own encryption key via PRF, tagged <code>v=1</code>. (<code>v=3</code> is a reserved legacy value from the withdrawn KiH mode and is never emitted by new events.) Clients query for events matching the gateway they're authenticating against. <code>transports</code> and <code>client</code> tags are optional.</p>
     </div>
   </section>
 
@@ -315,15 +318,18 @@
             <span class="code-title">Usage with nostkey.org gateway</span>
           </div>
           <pre><code><span class="k">import</span> { setup, discover, publishKeytrEvent } <span class="k">from</span> <span class="s">'@sovit.xyz/keytr'</span>
+<span class="k">import</span> { finalizeEvent } <span class="k">from</span> <span class="s">'nostr-tools/pure'</span>
 
-<span class="c">// Setup with nostkey.org gateway (PRF-first, KiH fallback)</span>
-<span class="k">const</span> { eventTemplate, nsecBytes, npub, mode }
-  = <span class="k">await</span> setup({ userName: <span class="s">'alice'</span>, userDisplayName: <span class="s">'Alice'</span>, rpId: <span class="s">'nostkey.org'</span> })
+<span class="c">// Setup with nostkey.org gateway (PRF only)</span>
+<span class="k">const</span> { eventTemplate, nsecBytes, npub }
+  = <span class="k">await</span> setup({ userName: <span class="s">'alice'</span>, userDisplayName: <span class="s">'Alice'</span>, rpId: <span class="s">'nostkey.org'</span>, rpName: <span class="s">'keytr'</span> })
 
-<span class="c">// Sign &amp; publish the kind:31777 event to relays</span>
+<span class="c">// Sign &amp; publish the kind:31777 event to your relays</span>
+<span class="k">const</span> signed = finalizeEvent(eventTemplate, nsecBytes)
+<span class="k">await</span> publishKeytrEvent(signed, relays)
 
-<span class="c">// Discoverable login: auto-detects PRF vs KiH, one biometric tap</span>
-<span class="k">const</span> { nsecBytes, npub, pubkey } = <span class="k">await</span> discover(relays)</code></pre>
+<span class="c">// Discoverable login on a new device: one biometric tap (PRF)</span>
+<span class="k">const</span> { nsecBytes, npub, pubkey } = <span class="k">await</span> discover(relays, { rpId: <span class="s">'nostkey.org'</span> })</code></pre>
         </div>
         <p class="dev-note">To have your origin authorized for cross-client login via nostkey.org, add your domain to the <a href="https://github.com/sovITxyz/nostkey.org">origins list</a> via PR.</p>
       </div>
